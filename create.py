@@ -1,14 +1,15 @@
 from sqlalchemy.orm import sessionmaker
-# from sqlalchemy import or_
+# from sqlalchemy import and_, not_
 from main import Authors, Publishers, Books, Customers, Librarians, Loans, Date, engine
 import datetime
+import sqlalchemy
 
 Session = sessionmaker(bind=engine)
 session = Session()
 
 def user_choice_menu():
     print("------ [ MENU ] -------")
-    print("1| Add a publisher")
+    print("1| Add a new publisher")
     print("2| Add a new author")
     print("3| Add a new book")
     print("4| Register a new customer")
@@ -170,7 +171,7 @@ def search(user_selection):
         value = input("Searching for: ")
         query1 = session.query(Authors).filter(Authors.author_name.ilike(f"%{value}%")).all()
         query2 = session.query(Authors).filter(Authors.author_surname.ilike(f"%{value}%")).all()
-        query3 = session.query(Books).filter(Books.book_name.ilike(f"%{value}%")).all()
+        query3 = session.query(Books).filter(Books.book_name.ilike(f"%{value}%")).filter(~session.query(Loans).filter(Loans.book_id == Books.book_id).exists()).all()
         query4 = session.query(Publishers).filter(Publishers.publisher_name.ilike(f"%{value}%")).all()
         query5 = session.query(Loans).filter(Loans.loan_active==True).all()
         for querys in query1:
@@ -178,11 +179,14 @@ def search(user_selection):
         for querys in query2:
             print("Authors surname:", querys)
         for querys in query3:
-            print("Book:", querys)
+            print("Available book:", querys)
         for querys in query4:
             print("Publisher:", querys)
         for querys in query5:
-            print("Loaned book:", query5)
+            book = session.query(Books).get(querys.book_id)
+            customer = session.query(Customers).get(querys.customer_id)
+            librarian = session.query(Librarians).get(querys.librarian_id)
+            print(f"Loaned book: {book.book_name}, by customer: {customer.customer_name} {customer.customer_surname}, assigned by librarian: {librarian.librarian_name} {librarian.librarian_surname}")
     elif user_selection == '2':
         value = input("Searching for: ")
         query1 = session.query(Authors).filter(Authors.author_name.ilike(f"%{value}%")).all()
@@ -193,7 +197,7 @@ def search(user_selection):
             print("Authors surname:", querys)
     elif user_selection == '3':
         value = input("Searching for: ")
-        query = session.query(Books).filter(Books.book_name.ilike(f"%{value}%")).all()
+        query = session.query(Books).filter(Books.book_name.ilike(f"%{value}%")).filter(~session.query(Loans).filter(Loans.book_id == Books.book_id).exists()).all()
         if query:
             for querys in query:
                 print(querys)
@@ -226,9 +230,9 @@ def search(user_selection):
         while True:
             try:
                 value = input("Enter librarians ID: ")
+                value = int(value)
                 if not value:
                     raise ValueError
-                value = int(value)
                 query = session.query(Loans, Books, Customers, Librarians).\
                     join(Books, Loans.book_id == Books.book_id).\
                     join(Customers, Loans.customer_id == Customers.customer_id).\
@@ -252,5 +256,5 @@ def search(user_selection):
                 print("Librarian ID must be an integer!")
     
 def search_from_input():
-    user_selection = input("Search by: \n1|Everything\n2|Author\n3|Book\n4|Publisher\n5|All loaned books\n6|Loaned books by librarians ID\n")
+    user_selection = input("Search by: \n1|Everything (Excluding loaned books)\n2|Author\n3|Book\n4|Publisher\n5|All loaned books\n6|Loaned books by librarians ID\n")
     return search(user_selection)    
