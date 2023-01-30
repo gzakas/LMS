@@ -6,12 +6,12 @@ engine = create_engine('sqlite:///data/lms.db')
 Base = declarative_base()
 
 
-class Authors(Base):
+class Author(Base):
     __tablename__ = 'authors'
     author_id = Column(Integer, primary_key=True)
     author_name = Column("Author name", String)
     author_surname = Column("Author surname", String)
-    books = relationship("Books", back_populates='author')
+    books = relationship("Book", back_populates='authors')
 
     def __init__(self, author_name, author_surname):
         self.author_name = author_name
@@ -24,11 +24,11 @@ class Authors(Base):
         return "{} {}".format(self.author_name, self.author_surname)
 
 
-class Publishers(Base):
+class Publisher(Base):
     __tablename__ = 'publishers'
     publisher_id = Column(Integer, primary_key=True)
     publisher_name = Column("Publisher", String)
-    books = relationship('Books', back_populates='publisher')
+    books = relationship('Book', back_populates='publishers')
 
     def __init__(self, publisher_name):
         self.publisher_name = publisher_name
@@ -40,16 +40,16 @@ class Publishers(Base):
         return "{}".format(self.publisher_name)
 
 
-class Books(Base):
+class Book(Base):
     __tablename__ = 'books'
     book_id = Column(Integer, primary_key=True)
     book_name = Column("Book name", String)
     book_isbn = Column("ISBN", Integer)
     author_id = Column("Author id", Integer, ForeignKey('authors.author_id'))
-    author = relationship("Authors", back_populates='books')
+    authors = relationship("Author", back_populates='books')
     publisher_id = Column("Publisher id", Integer, ForeignKey('publishers.publisher_id'))
-    publisher = relationship("Publishers", back_populates='books')
-    loans = relationship('Loans', back_populates='books')
+    publishers = relationship("Publisher", back_populates='books')
+    loans = relationship('Loan', back_populates='books')
 
     def __init__(self, book_name, book_isbn, author_id, publisher_id):
         self.book_name = book_name
@@ -63,13 +63,13 @@ class Books(Base):
     def __repr__(self):
         return "{} {}".format(self.book_name, self.book_isbn)
 
-class Customers(Base):
+class Customer(Base):
     __tablename__ = 'customers'
     customer_id = Column(Integer, primary_key=True)
     customer_name = Column("Customer name", String)
     customer_surname = Column("Customer surname", String)
     customer_address = Column("Customer address", String)
-    loans = relationship("Loans", back_populates='customers')
+    loans = relationship("Loan", back_populates='customers')
 
     def __init__(self, customer_name, customer_surname, customer_address):
         self.customer_name = customer_name
@@ -83,12 +83,12 @@ class Customers(Base):
         return "{} {} {}".format(self.customer_name, self.customer_surname, self.customer_address)
 
 
-class Librarians(Base):
+class Librarian(Base):
     __tablename__ = 'librarians'
     librarian_id = Column(Integer, primary_key=True)
     librarian_name = Column("Librarian name", String)
     librarian_surname = Column("Librarian surname", String)
-    loans = relationship("Loans", back_populates='librarian')
+    loans = relationship("Loan", back_populates='librarians')
 
     def __init__(self, librarian_name, librarian_surname):
         self.librarian_name = librarian_name
@@ -101,17 +101,17 @@ class Librarians(Base):
         return "{} {}".format(self.librarian_name, self.librarian_surname)
 
 
-class Loans(Base):
+class Loan(Base):
     __tablename__ = 'loans'
     loan_id = Column(Integer, primary_key=True, autoincrement=True)
     loan_date = Column("Loan date", Date)
     loan_active = Column("Loan status", Boolean, default=False)
     customer_id = Column("Customer id", Integer, ForeignKey('customers.customer_id'))
-    customers = relationship("Customers", back_populates='loans')
+    customers = relationship("Customer", back_populates='loans')
     book_id = Column("Book id", Integer, ForeignKey('books.book_id'))
-    books = relationship("Books", back_populates='loans')
+    books = relationship("Book", back_populates='loans')
     librarian_id = Column("Librarian id", Integer, ForeignKey('librarians.librarian_id'))
-    librarian = relationship("Librarians", back_populates='loans')
+    librarians = relationship("Librarian", back_populates='loans')
     return_date = Column("Date of return", Date, default=None)
 
     def __init__(self, loan_date, loan_active, customer_id, book_id, librarian_id):
