@@ -44,7 +44,10 @@ def add_book_from_input():
             except ValueError:
                 print("Error: Books ISBN must be a number!")
         while True:
-            try:    
+            try:
+                authors_list = session.query(Author)
+                for tries in authors_list:
+                    print(f"{tries.author_id} | {tries}")    
                 authors = input("Authors ID: ")
                 authors = int(authors)
                 break
@@ -52,6 +55,9 @@ def add_book_from_input():
                 print("Error: Authors ID must be a number!")
         while True:
             try:
+                publishers_list = session.query(Publisher)
+                for tries in publishers_list:
+                    print(f"{tries.publisher_id} | {tries.publisher_name}")
                 publishers = input("Publishers ID: ")
                 publishers = int(publishers)
                 break
@@ -126,6 +132,9 @@ def assign_loan_from_input():
     loan_active = True
     while True:
         try:
+            customer_list = session.query(Customer)
+            for tries in customer_list:
+                print(f"{tries.customer_id} | {tries.customer_name} {tries.customer_surname}")
             customer_id = input("Enter customers ID: ")
             customer_id = int(customer_id)
             break
@@ -133,6 +142,9 @@ def assign_loan_from_input():
             print("Error: Customer ID must be a number")
     while True:
         try:
+            book_list = session.query(Book).filter(~session.query(Loan).filter(Loan.book_id == Book.book_id).filter(Loan.loan_active == 1).exists()).all()
+            for tries in book_list:
+                print(f"{tries.book_id} | {tries.book_name}")
             book_id = input("Enter books ID: ")
             book_id = int(book_id)
             break
@@ -140,6 +152,9 @@ def assign_loan_from_input():
             print("Error: Book ID must be a number")
     while True:
         try:
+            librarian_list = session.query(Librarian)
+            for tries in librarian_list:
+                print(f"{tries.librarian_id} | {tries.librarian_name} {tries.librarian_surname}")
             librarian_id = input("Enter librarians ID: ")
             librarian_id = int(librarian_id)
             break
@@ -175,6 +190,10 @@ def customer_returns_from_input():
     clear()
     while True:
         try:
+            all_loans = session.query(Loan).filter(Loan.loan_active != 0).all()
+            for tries in all_loans:
+                book = session.query(Book).get(tries.book_id)
+                print(f"{tries.book_id} | {book.book_name}")
             user_input = input("Enter book ID which the customer returned: ")
             user_input = int(user_input)
             if not user_input:
@@ -252,6 +271,9 @@ def search(user_selection):
     elif user_selection == '6':
         while True:
             try:
+                librarian_list = session.query(Librarian)
+                for tries in librarian_list:
+                    print(f"{tries.librarian_id} | {tries.librarian_name} {tries.librarian_surname}")
                 value = input("Enter librarians ID: ")
                 value = int(value)
                 if not value:
