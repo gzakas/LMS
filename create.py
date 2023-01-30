@@ -81,7 +81,7 @@ def add_book_from_input():
                 print("Error: Publishers ID must be a number!")
         add_book(book_name, book_isbn, authors, publishers)
         user_choice = input("Do you want to add another book? (yes/no): ")
-        if user_choice.lower() == "no" or "":
+        if user_choice.lower() == "no":
             break
         elif user_choice.lower() == "yes":
             continue
@@ -119,7 +119,7 @@ def add_author_from_input():
         elif user_choice.lower() == "yes":
             add_author_from_input()
         else:
-            print("Your input wasn't an option... I'll take it as a 'no'")
+            print("Your input wasn't an option... I'll take it as a 'no' then")
         
 
 def register_customer(customer_name, customer_surname, customer_address):
@@ -218,6 +218,7 @@ def assign_loan_from_input():
                 customer_ids.append(tries.customer_id)
             customer_id = input("Enter customers ID: ")
             customer_id = int(customer_id)
+            clear()
             if customer_id not in customer_ids:
                 clear()
                 print("Error: Customer with that ID was not found")
@@ -234,6 +235,7 @@ def assign_loan_from_input():
                 books_list.append(tries.book_id)
             book_id = input("Enter books ID: ")
             book_id = int(book_id)
+            clear()
             if book_id not in books_list:
                 clear()
                 print("Error: Book with that ID was not found")
@@ -250,6 +252,7 @@ def assign_loan_from_input():
                 librarians_list.append(tries.librarian_id)
             librarian_id = input("Enter librarians ID: ")
             librarian_id = int(librarian_id)
+            clear()
             if librarian_list not in librarians_list:
                 clear()
                 print("Error: Librarian with that ID was not found")
@@ -310,7 +313,7 @@ def search(user_selection):
         author_surname_search = session.query(Author).filter(Author.author_surname.ilike(f"%{value}%")).all()
         book_name_search = session.query(Book).filter(or_(and_(Book.book_name.ilike(f"%{value}%"), 
             ~session.query(Loan).filter(Loan.book_id == Book.book_id).exists()),and_(Book.book_name.ilike(f"%{value}%"), 
-            session.query(Loan).filter(Loan.book_id == Book.book_id, Loan.loan_active == 0).exists()))).all()
+                session.query(Loan).filter(Loan.book_id == Book.book_id, Loan.loan_active == 0).exists()))).all()
         publisher_name_search = session.query(Publisher).filter(Publisher.publisher_name.ilike(f"%{value}%")).all()
         loaned_check = session.query(Loan).filter(Loan.loan_active==True).all()
         for tries in author_name_search:
