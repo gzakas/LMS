@@ -34,38 +34,59 @@ def add_book(book_name, book_isbn, authors, publishers):
 
 def add_book_from_input():
     clear()
+    authors_list = []
+    publishers_list = []
     while True:
         book_name = input("Name of the book: ")
+        clear()
         while True:
             try:
                 book_isbn = input("Books ISBN code: ")
                 book_isbn = int(book_isbn)
+                clear()
                 break
             except ValueError:
                 print("Error: Books ISBN must be a number!")
         while True:
             try:
-                authors_list = session.query(Author)
-                for tries in authors_list:
-                    print(f"{tries.author_id} | {tries}")    
+                author_list = session.query(Author)
+                for tries in author_list:
+                    print(f"{tries.author_id} | {tries}") 
+                    authors_list.append(tries.author_id)   
                 authors = input("Authors ID: ")
                 authors = int(authors)
+                clear()
+                if authors not in authors_list:
+                    clear()
+                    print("Error: Author with that ID was not found")
+                    continue
                 break
             except ValueError:
                 print("Error: Authors ID must be a number!")
         while True:
             try:
-                publishers_list = session.query(Publisher)
-                for tries in publishers_list:
+                publisher_list = session.query(Publisher)
+                for tries in publisher_list:
                     print(f"{tries.publisher_id} | {tries.publisher_name}")
+                    publishers_list.append(tries.publisher_id)
                 publishers = input("Publishers ID: ")
                 publishers = int(publishers)
+                clear()
+                if publishers not in publishers_list:
+                    clear()
+                    print("Error: Publisher with that ID was not found")
+                    continue
                 break
             except ValueError:
                 print("Error: Publishers ID must be a number!")
         add_book(book_name, book_isbn, authors, publishers)
         user_choice = input("Do you want to add another book? (yes/no): ")
         if user_choice.lower() == "no" or "":
+            break
+        elif user_choice.lower() == "yes":
+            continue
+        else:
+            print("This input wasn't an option... I'll take it as a 'no' then")
             break
 def add_author(author_name, author_surname):
     authors = Author(author_name, author_surname)
@@ -77,12 +98,28 @@ def add_author_from_input():
     clear()
     while True:
         author_name = input("Name of the author: ")
+        if author_name == "":
+            print("This field can't be empty!")
+            continue
+        clear()
+        break
+    while True:
         author_surname = input("Surname of the author: ")
+        if author_surname == "":
+            print("This field can't be empty!")
+            continue
+        clear()
         add_author(author_name, author_surname)
         print("Author was added successfully")
+        break
+    while True:
         user_choice = input("Do you want to add another author? (yes/no): ")
-        if user_choice.lower() == "no" or "":
+        if user_choice.lower() == "no":
             break
+        elif user_choice.lower() == "yes":
+            add_author_from_input()
+        else:
+            print("Your input wasn't an option... I'll take it as a 'no'")
         
 
 def register_customer(customer_name, customer_surname, customer_address):
@@ -93,11 +130,31 @@ def register_customer(customer_name, customer_surname, customer_address):
 
 def register_customer_from_input():
     clear()
-    customer_name = input("Customers name: ")
-    customer_surname = input("Customers surname: ")
-    customer_address = input("Customers address: ")
-    print("Customer was added successfully")
-    return register_customer(customer_name, customer_surname, customer_address)
+    while True:
+        customer_name = input("Customers name: ")
+        if customer_name == "":
+            clear()
+            print("This field can't be empty!")
+            continue
+        clear()
+        break
+    while True:
+        customer_surname = input("Customers surname: ")
+        if customer_surname == "":
+            clear()
+            print("This field can't be empty!")
+            continue
+        clear()
+        break
+    while True:
+        customer_address = input("Customers address: ")
+        if customer_address == "":
+            clear()
+            print("This field can't be empty!")
+            continue
+        clear()
+        print("Customer was added successfully")
+        return register_customer(customer_name, customer_surname, customer_address)
 
 def new_librarian(librarian_name, librarian_surname):
     librarians = Librarian(librarian_name, librarian_surname)
@@ -107,8 +164,20 @@ def new_librarian(librarian_name, librarian_surname):
 
 def new_librarian_from_input():
     clear()
-    librarian_name = input("Librarians name: ")
-    librarian_surname = input("Librarians surname: ")
+    while True:
+        librarian_name = input("Librarians name: ")
+        if librarian_name == "":
+            print("This field can't be empty!")
+            continue
+        clear()
+        break
+    while True:
+        librarian_surname = input("Librarians surname: ")
+        if librarian_surname == "":
+            print("This field can't be empty!")
+            continue
+        clear()
+        break
     print("Librarian was added successfully")
     return new_librarian(librarian_name, librarian_surname)
 
@@ -120,7 +189,13 @@ def new_publisher(publisher_name):
 
 def new_publisher_from_input():
     clear()
-    publisher_name = input("Publishers name: ")
+    while True:
+        publisher_name = input("Publishers name: ")
+        if publisher_name == "":
+            print("This field can't be empty!")
+            continue
+        clear()
+        break
     print("Publisher was added successfully")
     return new_publisher(publisher_name)
 
