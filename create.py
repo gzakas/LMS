@@ -1,4 +1,5 @@
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import or_, and_
 from model import Author, Publisher, Book, Customer, Librarian, Loan, engine
 import datetime
 import os
@@ -187,55 +188,59 @@ def customer_returns_from_input():
 def search(user_selection):
     if user_selection == '1':
         value = input("Searching for: ")
-        query1 = session.query(Author).filter(Author.author_name.ilike(f"%{value}%")).all()
-        query2 = session.query(Author).filter(Author.author_surname.ilike(f"%{value}%")).all()
-        query3 = session.query(Book).filter(Book.book_name.ilike(f"%{value}%")).filter(~session.query(Loan).filter(Loan.book_id == Book.book_id).exists()).all()
-        query4 = session.query(Publisher).filter(Publisher.publisher_name.ilike(f"%{value}%")).all()
-        query5 = session.query(Loan).filter(Loan.loan_active==True).all()
-        for querys in query1:
-            print("Authors name", querys)
-        for querys in query2:
-            print("Authors surname:", querys)
-        for querys in query3:
-            print("Available book:", querys)
-        for querys in query4:
-            print("Publisher:", querys)
-        for querys in query5:
-            book = session.query(Book).get(querys.book_id)
-            customer = session.query(Customer).get(querys.customer_id)
-            librarian = session.query(Librarian).get(querys.librarian_id)
+        author_name_search = session.query(Author).filter(Author.author_name.ilike(f"%{value}%")).all()
+        author_surname_search = session.query(Author).filter(Author.author_surname.ilike(f"%{value}%")).all()
+        book_name_search = session.query(Book).filter(or_(and_(Book.book_name.ilike(f"%{value}%"), 
+            ~session.query(Loan).filter(Loan.book_id == Book.book_id).exists()),and_(Book.book_name.ilike(f"%{value}%"), 
+            session.query(Loan).filter(Loan.book_id == Book.book_id, Loan.loan_active == 0).exists()))).all()
+        publisher_name_search = session.query(Publisher).filter(Publisher.publisher_name.ilike(f"%{value}%")).all()
+        loaned_check = session.query(Loan).filter(Loan.loan_active==True).all()
+        for tries in author_name_search:
+            print("Authors name", tries)
+        for tries in author_surname_search:
+            print("Authors surname:", tries)
+        for tries in book_name_search:
+            print(f"Available book: {tries.book_id} {tries}")
+        for tries in publisher_name_search:
+            print("Publisher:", tries)
+        for tries in loaned_check:
+            book = session.query(Book).get(tries.book_id)
+            customer = session.query(Customer).get(tries.customer_id)
+            librarian = session.query(Librarian).get(tries.librarian_id)
             print(f"Loaned book: {book.book_name}, by customer: {customer.customer_name} {customer.customer_surname}, assigned by librarian: {librarian.librarian_name} {librarian.librarian_surname}")
     elif user_selection == '2':
         value = input("Searching for: ")
-        query1 = session.query(Author).filter(Author.author_name.ilike(f"%{value}%")).all()
-        query2 = session.query(Author).filter(Author.author_surname.ilike(f"%{value}%")).all()
-        for querys in query1:
-            print(f"Authors name: {querys.author_name}")
-        for querys in query2:
-            print(f"Authors surname: {querys.author_surname}")
+        author_name_search = session.query(Author).filter(Author.author_name.ilike(f"%{value}%")).all()
+        author_surname_search = session.query(Author).filter(Author.author_surname.ilike(f"%{value}%")).all()
+        for tries in author_name_search:
+            print(f"Authors name: {tries.author_name}")
+        for tries in author_surname_search:
+            print(f"Authors surname: {tries.author_surname}")
     elif user_selection == '3':
         value = input("Searching for: ")
-        query = session.query(Book).filter(Book.book_name.ilike(f"%{value}%")).filter(~session.query(Loan).filter(Loan.book_id == Book.book_id).exists()).all()
-        if query:
-            for querys in query:
-                print(f"Book ID: {querys.book_id} {querys}")
+        book_search = session.query(Book).filter(or_(and_(Book.book_name.ilike(f"%{value}%"), 
+            ~session.query(Loan).filter(Loan.book_id == Book.book_id).exists()),and_(Book.book_name.ilike(f"%{value}%"), 
+            session.query(Loan).filter(Loan.book_id == Book.book_id, Loan.loan_active == 0).exists()))).all()
+        if book_search:
+            for tries in book_search:
+                print(f"Book ID: {tries.book_id} {tries}")
         else:
             print("Found nothing")
     elif user_selection == '4':
         value = input("Searching for: ")
-        query = session.query(Publisher).filter(Publisher.publisher_name.ilike(f"%{value}%")).all()
-        if query:
-            for querys in query:
-                print(querys)
+        book_search = session.query(Publisher).filter(Publisher.publisher_name.ilike(f"%{value}%")).all()
+        if book_search:
+            for tries in book_search:
+                print(tries)
         else:
             print("Found nothing")
     elif user_selection == '5':
-        query = session.query(Loan, Book, Customer).\
+        book_search = session.query(Loan, Book, Customer).\
         join(Book, Loan.book_id == Book.book_id).\
         join(Customer, Loan.customer_id == Customer.customer_id).\
         filter(Loan.loan_active==True).all()
-        if query:
-            for loan, book, customer in query:
+        if book_search:
+            for loan, book, customer in book_search:
                 print("Book `{}` was loaned to {} {} on {} ".format(
                     book.book_name,
                     customer.customer_name,\
@@ -251,13 +256,13 @@ def search(user_selection):
                 value = int(value)
                 if not value:
                     raise ValueError
-                query = session.query(Loan, Book, Customer, Librarian).\
+                book_search = session.query(Loan, Book, Customer, Librarian).\
                     join(Book, Loan.book_id == Book.book_id).\
                     join(Customer, Loan.customer_id == Customer.customer_id).\
                     join(Librarian, Loan.librarian_id == Librarian.librarian_id).\
                     filter(Loan.librarian_id==value and Loan.loan_active==False).all()
-                if query:
-                    for loan, book, customer, librarian in query:
+                if book_search:
+                    for loan, book, customer, librarian in book_search:
                         print("Librarian {} {} loaned a book named `{}` to {} {} on {}".format(
                             librarian.librarian_name,
                             librarian.librarian_surname,
