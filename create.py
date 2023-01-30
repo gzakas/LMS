@@ -29,15 +29,29 @@ def add_book(book_name, book_isbn, author, publisher):
     return book
 
 def add_book_from_input():
-    try:
-        book_name = input("Name of the book: ")
-        book_isbn = input("Books ISBN code: ")
-        author = input("Authors ID: ")
-        publisher = input("Publishers ID: ")
-    except ValueError:
-        print("Error: This field must be a number")
-    else:
-        return add_book(book_name, book_isbn, author, publisher)
+    book_name = input("Name of the book: ")
+    while True:
+        try:
+            book_isbn = input("Books ISBN code: ")
+            book_isbn = int(book_isbn)
+            break
+        except ValueError:
+            print("Error: Books ISBN must be a number!")
+    while True:
+        try:    
+            author = input("Authors ID: ")
+            author = int(author)
+            break
+        except ValueError:
+            print("Error: Authors ID must be a number!")
+    while True:
+        try:
+            publisher = input("Publishers ID: ")
+            publisher = int(publisher)
+            break
+        except ValueError:
+            print("Error: Publishers ID must be a number!")
+    return add_book(book_name, book_isbn, author, publisher)
 
 def add_author(author_name, author_surname):
     author = Authors(author_name, author_surname)
@@ -91,10 +105,28 @@ def assign_loan(loan_date, loan_active, customer_id, book_id, librarian_id):
 
 def assign_loan_from_input():
     loan_date = datetime.datetime.now().date()
-    customer_id = input("Enter customers ID: ")
-    book_id = input("Enter books ID: ")
-    librarian_id = input("Enter librarians ID: ")
     loan_active = True
+    while True:
+        try:
+            customer_id = input("Enter customers ID: ")
+            customer_id = int(customer_id)
+            break
+        except ValueError:
+            print("Error: Customer ID must be a number")
+    while True:
+        try:
+            book_id = input("Enter books ID: ")
+            book_id = int(book_id)
+            break
+        except ValueError:
+            print("Error: Book ID must be a number")
+    while True:
+        try:
+            librarian_id = input("Enter librarians ID: ")
+            librarian_id = int(librarian_id)
+            break
+        except ValueError:
+            print("Error: Librarian ID must be a number")
     return assign_loan(loan_date, loan_active, customer_id, book_id, librarian_id)
 
 def check_active_loans(query=session.query(Loans)):
@@ -102,7 +134,6 @@ def check_active_loans(query=session.query(Loans)):
         .join(Loans, Books.book_id == Loans.book_id)\
         .join(Customers, Loans.customer_id == Customers.customer_id)\
             .filter(Loans.loan_active == True).all()
-    
     if query:
         for x in query:
             print("Loan id: {}, Book id: {}, Book name: {}, Loaned at: {}, Customers name: {} {}".format(
@@ -119,15 +150,22 @@ def check_active_loans(query=session.query(Loans)):
 def customer_returns(user_input):
     current_date = datetime.datetime.now().date()
     session.query(Loans).filter_by(book_id=user_input).update({Loans.return_date: current_date, Loans.loan_active: False})
-    
     session.commit()
 
 def customer_returns_from_input():
-    user_input = input("Enter book ID which the customer returned: ")
-    return customer_returns(user_input)
+    while True:
+        try:
+            user_input = input("Enter book ID which the customer returned: ")
+            user_input = int(user_input)
+            if not user_input:
+                raise ValueError
+            else:
+                customer_returns(user_input)
+                break
+        except ValueError:
+            print("Error: This field must be a number")
 
 def search(user_selection):
-    
     if user_selection == '1':
         value = input("Searching for: ")
         query1 = session.query(Authors).filter(Authors.author_name.ilike(f"%{value}%")).all()
@@ -170,7 +208,6 @@ def search(user_selection):
         else:
             print("Found nothing")
     elif user_selection == '5':
-        value = 1
         query = session.query(Loans, Books, Customers).\
         join(Books, Loans.book_id == Books.book_id).\
         join(Customers, Loans.customer_id == Customers.customer_id).\
@@ -185,26 +222,34 @@ def search(user_selection):
                 ))
         else:
                 print("Nothing is loaned")
-
     elif user_selection == '6':
-        value = input("Enter librarians ID: ")
-        query = session.query(Loans, Books, Customers, Librarians).\
-            join(Books, Loans.book_id == Books.book_id).\
-            join(Customers, Loans.customer_id == Customers.customer_id).\
-            join(Librarians, Loans.librarian_id == Librarians.librarian_id).\
-            filter(Loans.librarian_id==value and Loans.loan_active==False).all()
-        if query:
-            for loan, book, customer, librarian in query:
-                print("Librarian {} {} loaned a book named `{}` to {} {} on {}".format(
-                    librarian.librarian_name,
-                    librarian.librarian_surname,
-                    book.book_name,
-                    customer.customer_name,
-                    customer.customer_surname,
-                    loan.loan_date
-                ))
-        else:
-            print("Nothing is loaned by this librarian")
+        while True:
+            try:
+                value = input("Enter librarians ID: ")
+                if not value:
+                    raise ValueError
+                value = int(value)
+                query = session.query(Loans, Books, Customers, Librarians).\
+                    join(Books, Loans.book_id == Books.book_id).\
+                    join(Customers, Loans.customer_id == Customers.customer_id).\
+                    join(Librarians, Loans.librarian_id == Librarians.librarian_id).\
+                    filter(Loans.librarian_id==value and Loans.loan_active==False).all()
+                if query:
+                    for loan, book, customer, librarian in query:
+                        print("Librarian {} {} loaned a book named `{}` to {} {} on {}".format(
+                            librarian.librarian_name,
+                            librarian.librarian_surname,
+                            book.book_name,
+                            customer.customer_name,
+                            customer.customer_surname,
+                            loan.loan_date
+                        ))
+                    break
+                else:
+                    print("Nothing is loaned by this librarian")
+                    break
+            except ValueError:
+                print("Librarian ID must be an integer!")
     
 def search_from_input():
     user_selection = input("Search by: \n1|Everything\n2|Author\n3|Book\n4|Publisher\n5|All loaned books\n6|Loaned books by librarians ID\n")
