@@ -79,6 +79,7 @@ def add_author_from_input():
         author_name = input("Name of the author: ")
         author_surname = input("Surname of the author: ")
         add_author(author_name, author_surname)
+        print("Author was added successfully")
         user_choice = input("Do you want to add another author? (yes/no): ")
         if user_choice.lower() == "no" or "":
             break
@@ -95,6 +96,7 @@ def register_customer_from_input():
     customer_name = input("Customers name: ")
     customer_surname = input("Customers surname: ")
     customer_address = input("Customers address: ")
+    print("Customer was added successfully")
     return register_customer(customer_name, customer_surname, customer_address)
 
 def new_librarian(librarian_name, librarian_surname):
@@ -107,6 +109,7 @@ def new_librarian_from_input():
     clear()
     librarian_name = input("Librarians name: ")
     librarian_surname = input("Librarians surname: ")
+    print("Librarian was added successfully")
     return new_librarian(librarian_name, librarian_surname)
 
 def new_publisher(publisher_name):
@@ -118,6 +121,7 @@ def new_publisher(publisher_name):
 def new_publisher_from_input():
     clear()
     publisher_name = input("Publishers name: ")
+    print("Publisher was added successfully")
     return new_publisher(publisher_name)
 
 def assign_loan(loan_date, loan_active, customer_id, book_id, librarian_id):
@@ -130,36 +134,55 @@ def assign_loan_from_input():
     clear()
     loan_date = datetime.datetime.now().date()
     loan_active = True
+    customer_ids = []
     while True:
         try:
             customer_list = session.query(Customer)
             for tries in customer_list:
                 print(f"{tries.customer_id} | {tries.customer_name} {tries.customer_surname}")
+                customer_ids.append(tries.customer_id)
             customer_id = input("Enter customers ID: ")
             customer_id = int(customer_id)
+            if customer_id not in customer_ids:
+                clear()
+                print("Error: Customer with that ID was not found")
+                continue
             break
         except ValueError:
             print("Error: Customer ID must be a number")
     while True:
+        books_list = []
         try:
             book_list = session.query(Book).filter(~session.query(Loan).filter(Loan.book_id == Book.book_id).filter(Loan.loan_active == 1).exists()).all()
             for tries in book_list:
                 print(f"{tries.book_id} | {tries.book_name}")
+                books_list.append(tries.book_id)
             book_id = input("Enter books ID: ")
             book_id = int(book_id)
+            if book_id not in books_list:
+                clear()
+                print("Error: Book with that ID was not found")
+                continue
             break
         except ValueError:
             print("Error: Book ID must be a number")
     while True:
+        librarians_list = []
         try:
             librarian_list = session.query(Librarian)
             for tries in librarian_list:
                 print(f"{tries.librarian_id} | {tries.librarian_name} {tries.librarian_surname}")
+                librarians_list.append(tries.librarian_id)
             librarian_id = input("Enter librarians ID: ")
             librarian_id = int(librarian_id)
+            if librarian_list not in librarians_list:
+                clear()
+                print("Error: Librarian with that ID was not found")
+                continue
             break
         except ValueError:
             print("Error: Librarian ID must be a number")
+    print("Loan was successful!")
     return assign_loan(loan_date, loan_active, customer_id, book_id, librarian_id)
 
 def check_active_loans(query=session.query(Loan)):
@@ -203,6 +226,7 @@ def customer_returns_from_input():
                 break
         except ValueError:
             print("Error: This field must be a number")
+    print("Book was returned successfully")
 
 def search(user_selection):
     if user_selection == '1':
@@ -226,7 +250,7 @@ def search(user_selection):
             book = session.query(Book).get(tries.book_id)
             customer = session.query(Customer).get(tries.customer_id)
             librarian = session.query(Librarian).get(tries.librarian_id)
-            print(f"Loaned book: {book.book_name}, by customer: {customer.customer_name} {customer.customer_surname}, assigned by librarian: {librarian.librarian_name} {librarian.librarian_surname}")
+            print(f"Loaned book: ID: {book.book_id} {book.book_name}, by customer: {customer.customer_name} {customer.customer_surname}, assigned by librarian: {librarian.librarian_name} {librarian.librarian_surname}")
     elif user_selection == '2':
         value = input("Searching for: ")
         author_name_search = session.query(Author).filter(Author.author_name.ilike(f"%{value}%")).all()
@@ -247,19 +271,19 @@ def search(user_selection):
             print("Found nothing")
     elif user_selection == '4':
         value = input("Searching for: ")
-        book_search = session.query(Publisher).filter(Publisher.publisher_name.ilike(f"%{value}%")).all()
-        if book_search:
-            for tries in book_search:
+        publisher_search = session.query(Publisher).filter(Publisher.publisher_name.ilike(f"%{value}%")).all()
+        if publisher_search:
+            for tries in publisher_search:
                 print(tries)
         else:
             print("Found nothing")
     elif user_selection == '5':
-        book_search = session.query(Loan, Book, Customer).\
+        loan_search = session.query(Loan, Book, Customer).\
         join(Book, Loan.book_id == Book.book_id).\
         join(Customer, Loan.customer_id == Customer.customer_id).\
         filter(Loan.loan_active==True).all()
-        if book_search:
-            for loan, book, customer in book_search:
+        if loan_search:
+            for loan, book, customer in loan_search:
                 print("Book `{}` was loaned to {} {} on {} ".format(
                     book.book_name,
                     customer.customer_name,\
