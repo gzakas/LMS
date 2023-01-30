@@ -1,6 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 from model import Author, Publisher, Book, Customer, Librarian, Loan, engine
 import datetime
+import os
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -21,6 +22,9 @@ def user_choice_menu():
     choice = input("What's your choice?: ")
     return choice
 
+def clear():
+    os.system("cls")
+
 def add_book(book_name, book_isbn, authors, publishers):
     book = Book(book_name, book_isbn, authors, publishers)
     session.add(book)
@@ -28,6 +32,7 @@ def add_book(book_name, book_isbn, authors, publishers):
     return book
 
 def add_book_from_input():
+    clear()
     while True:
         book_name = input("Name of the book: ")
         while True:
@@ -62,6 +67,7 @@ def add_author(author_name, author_surname):
     return authors
 
 def add_author_from_input():
+    clear()
     while True:
         author_name = input("Name of the author: ")
         author_surname = input("Surname of the author: ")
@@ -78,6 +84,7 @@ def register_customer(customer_name, customer_surname, customer_address):
     return customers
 
 def register_customer_from_input():
+    clear()
     customer_name = input("Customers name: ")
     customer_surname = input("Customers surname: ")
     customer_address = input("Customers address: ")
@@ -90,6 +97,7 @@ def new_librarian(librarian_name, librarian_surname):
     return librarians
 
 def new_librarian_from_input():
+    clear()
     librarian_name = input("Librarians name: ")
     librarian_surname = input("Librarians surname: ")
     return new_librarian(librarian_name, librarian_surname)
@@ -101,6 +109,7 @@ def new_publisher(publisher_name):
     return publishers
 
 def new_publisher_from_input():
+    clear()
     publisher_name = input("Publishers name: ")
     return new_publisher(publisher_name)
 
@@ -111,6 +120,7 @@ def assign_loan(loan_date, loan_active, customer_id, book_id, librarian_id):
     return loans
 
 def assign_loan_from_input():
+    clear()
     loan_date = datetime.datetime.now().date()
     loan_active = True
     while True:
@@ -137,6 +147,7 @@ def assign_loan_from_input():
     return assign_loan(loan_date, loan_active, customer_id, book_id, librarian_id)
 
 def check_active_loans(query=session.query(Loan)):
+    clear()
     query = session.query(Book, Loan, Customer)\
         .join(Loan, Book.book_id == Loan.book_id)\
         .join(Customer, Loan.customer_id == Customer.customer_id)\
@@ -160,6 +171,7 @@ def customer_returns(user_input):
     session.commit()
 
 def customer_returns_from_input():
+    clear()
     while True:
         try:
             user_input = input("Enter book ID which the customer returned: ")
@@ -198,15 +210,15 @@ def search(user_selection):
         query1 = session.query(Author).filter(Author.author_name.ilike(f"%{value}%")).all()
         query2 = session.query(Author).filter(Author.author_surname.ilike(f"%{value}%")).all()
         for querys in query1:
-            print("Authors name", querys)
+            print(f"Authors name: {querys.author_name}")
         for querys in query2:
-            print("Authors surname:", querys)
+            print(f"Authors surname: {querys.author_surname}")
     elif user_selection == '3':
         value = input("Searching for: ")
         query = session.query(Book).filter(Book.book_name.ilike(f"%{value}%")).filter(~session.query(Loan).filter(Loan.book_id == Book.book_id).exists()).all()
         if query:
             for querys in query:
-                print(querys)
+                print(f"Book ID: {querys.book_id} {querys}")
         else:
             print("Found nothing")
     elif user_selection == '4':
@@ -262,7 +274,8 @@ def search(user_selection):
                 print("Librarian ID must be an integer!")
     
 def search_from_input():
-    user_selection = input("Search by: \n1|Everything (Excluding loaned books)\n2|Author\n3|Book\n4|Publisher\n5|All loaned books\n6|Loaned books by librarians ID\n")
+    clear()
+    user_selection = input("Search by: \n1| Everything (Excluding loaned books)\n2| Author\n3| Book\n4| Publisher\n5| All loaned books\n6| Loaned books by librarians ID\nChoice: ")
     return search(user_selection)    
 
 while True:
