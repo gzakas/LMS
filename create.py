@@ -46,6 +46,7 @@ def add_book_from_input():
                 clear()
                 break
             except ValueError:
+                clear()
                 print("Error: Books ISBN must be a number!")
         while True:
             try:
@@ -62,6 +63,7 @@ def add_book_from_input():
                     continue
                 break
             except ValueError:
+                clear()
                 print("Error: Authors ID must be a number!")
         while True:
             try:
@@ -78,6 +80,7 @@ def add_book_from_input():
                     continue
                 break
             except ValueError:
+                clear()
                 print("Error: Publishers ID must be a number!")
         add_book(book_name, book_isbn, authors, publishers)
         user_choice = input("Do you want to add another book? (yes/no): ")
@@ -120,6 +123,7 @@ def add_author_from_input():
             add_author_from_input()
         else:
             print("Your input wasn't an option... I'll take it as a 'no' then")
+            break
         
 
 def register_customer(customer_name, customer_surname, customer_address):
@@ -177,9 +181,18 @@ def new_librarian_from_input():
             print("This field can't be empty!")
             continue
         clear()
+        new_librarian(librarian_name, librarian_surname)
+        print("Librarian was added successfully")
         break
-    print("Librarian was added successfully")
-    return new_librarian(librarian_name, librarian_surname)
+    while True:
+        user_choice = input("Do you want to add another librarian? (yes/no): ")
+        if user_choice.lower() == "no":
+            break
+        elif user_choice.lower() == "yes":
+            add_author_from_input()
+        else:
+            print("Your input wasn't an option... I'll take it as a 'no' then")
+            break
 
 def new_publisher(publisher_name):
     publishers = Publisher(publisher_name)
@@ -195,9 +208,18 @@ def new_publisher_from_input():
             print("This field can't be empty!")
             continue
         clear()
+        new_publisher(publisher_name)
+        print("Publisher was added successfully")
         break
-    print("Publisher was added successfully")
-    return new_publisher(publisher_name)
+    while True:
+        user_choice = input("Do you want to add another publisher? (yes/no): ")
+        if user_choice.lower() == "no":
+            break
+        elif user_choice.lower() == "yes":
+            new_publisher_from_input()
+        else:
+            print("Your input wasn't an option... I'll take it as a 'no' then")
+            break
 
 def assign_loan(loan_date, loan_active, customer_id, book_id, librarian_id):
     loans = Loan(loan_date, loan_active, customer_id, book_id, librarian_id)
@@ -225,7 +247,8 @@ def assign_loan_from_input():
                 continue
             break
         except ValueError:
-            print("Error: Customer ID must be a number")
+            clear()
+            print("Error: Customer ID must be a number!")
     while True:
         books_list = []
         try:
@@ -242,7 +265,8 @@ def assign_loan_from_input():
                 continue
             break
         except ValueError:
-            print("Error: Book ID must be a number")
+            clear()
+            print("Error: Book ID must be a number!")
     while True:
         librarians_list = []
         try:
@@ -253,13 +277,14 @@ def assign_loan_from_input():
             librarian_id = input("Enter librarians ID: ")
             librarian_id = int(librarian_id)
             clear()
-            if librarian_list not in librarians_list:
+            if librarian_id not in librarians_list:
                 clear()
                 print("Error: Librarian with that ID was not found")
                 continue
             break
         except ValueError:
-            print("Error: Librarian ID must be a number")
+            clear()
+            print("Error: Librarian ID must be a number!")
     print("Loan was successful!")
     return assign_loan(loan_date, loan_active, customer_id, book_id, librarian_id)
 
@@ -279,8 +304,12 @@ def check_active_loans(query=session.query(Loan)):
                 x.Customer.customer_name,
                 x.Customer.customer_surname
             ))
+        input("Press Enter to continue...")
+        clear()
     else:
         print("No books are currently loaned")
+        input("Press Enter to continue...")
+        clear()
 
 def customer_returns(user_input):
     current_date = datetime.datetime.now().date()
@@ -294,20 +323,24 @@ def customer_returns_from_input():
             all_loans = session.query(Loan).filter(Loan.loan_active != 0).all()
             for tries in all_loans:
                 book = session.query(Book).get(tries.book_id)
-                print(f"{tries.book_id} | {book.book_name}")
+                customer = session.query(Customer).get(tries.customer_id)
+                print(f"Book id: {tries.book_id} | {book.book_name} | currently loaned to: {customer.customer_name} {customer.customer_surname}")
             user_input = input("Enter book ID which the customer returned: ")
             user_input = int(user_input)
             if not user_input:
                 raise ValueError
             else:
+                clear()
                 customer_returns(user_input)
+                print("Book was returned successfully")
                 break
         except ValueError:
-            print("Error: This field must be a number")
-    print("Book was returned successfully")
+            clear()
+            print("Error: This field must be a number!")
 
 def search(user_selection):
-    if user_selection == '1':
+    clear()
+    if user_selection == 1:
         value = input("Searching for: ")
         author_name_search = session.query(Author).filter(Author.author_name.ilike(f"%{value}%")).all()
         author_surname_search = session.query(Author).filter(Author.author_surname.ilike(f"%{value}%")).all()
@@ -329,33 +362,45 @@ def search(user_selection):
             customer = session.query(Customer).get(tries.customer_id)
             librarian = session.query(Librarian).get(tries.librarian_id)
             print(f"Loaned book: ID: {book.book_id} {book.book_name}, by customer: {customer.customer_name} {customer.customer_surname}, assigned by librarian: {librarian.librarian_name} {librarian.librarian_surname}")
-    elif user_selection == '2':
-        value = input("Searching for: ")
+        input("Press Enter to continue...")
+        clear()
+    elif user_selection == 2:
+        value = input("Searching in Authors for: ")
         author_name_search = session.query(Author).filter(Author.author_name.ilike(f"%{value}%")).all()
         author_surname_search = session.query(Author).filter(Author.author_surname.ilike(f"%{value}%")).all()
         for tries in author_name_search:
             print(f"Authors name: {tries.author_name}")
         for tries in author_surname_search:
             print(f"Authors surname: {tries.author_surname}")
-    elif user_selection == '3':
-        value = input("Searching for: ")
+        input("Press Enter to continue...")
+        clear()
+    elif user_selection == 3:
+        value = input("Searching in Books for: ")
         book_search = session.query(Book).filter(or_(and_(Book.book_name.ilike(f"%{value}%"), 
             ~session.query(Loan).filter(Loan.book_id == Book.book_id).exists()),and_(Book.book_name.ilike(f"%{value}%"), 
             session.query(Loan).filter(Loan.book_id == Book.book_id, Loan.loan_active == 0).exists()))).all()
         if book_search:
             for tries in book_search:
                 print(f"Book ID: {tries.book_id} {tries}")
+            input("Press Enter to continue...")
+            clear()
         else:
             print("Found nothing")
-    elif user_selection == '4':
-        value = input("Searching for: ")
+            input("Press Enter to continue...")
+            clear()
+    elif user_selection == 4:
+        value = input("Searching in Publishers for: ")
         publisher_search = session.query(Publisher).filter(Publisher.publisher_name.ilike(f"%{value}%")).all()
         if publisher_search:
             for tries in publisher_search:
                 print(tries)
+            input("Press Enter to continue...")
+            clear()
         else:
             print("Found nothing")
-    elif user_selection == '5':
+            input("Press Enter to continue...")
+            clear()
+    elif user_selection == 5:
         loan_search = session.query(Loan, Book, Customer).\
         join(Book, Loan.book_id == Book.book_id).\
         join(Customer, Loan.customer_id == Customer.customer_id).\
@@ -368,24 +413,40 @@ def search(user_selection):
                     customer.customer_surname,
                     loan.loan_date
                 ))
+            input("Press Enter to continue...")
+            clear()
         else:
-                print("Nothing is loaned")
-    elif user_selection == '6':
+            print("Nothing is loaned")
+            input("Press Enter to continue...")
+            clear()
+
+    elif user_selection == 6:
+        librarians_list = []
         while True:
             try:
                 librarian_list = session.query(Librarian)
                 for tries in librarian_list:
                     print(f"{tries.librarian_id} | {tries.librarian_name} {tries.librarian_surname}")
+                    librarians_list.append(tries.librarian_id)
                 value = input("Enter librarians ID: ")
                 value = int(value)
-                if not value:
-                    raise ValueError
+                if value not in librarians_list:
+                    clear()
+                    print("Error: Librarian with that ID was not found")
+                    continue
+                break
+            except ValueError:
+                clear()
+                print("Error: ID should be a number!")
+        while True:
+            try:
                 book_search = session.query(Loan, Book, Customer, Librarian).\
                     join(Book, Loan.book_id == Book.book_id).\
                     join(Customer, Loan.customer_id == Customer.customer_id).\
                     join(Librarian, Loan.librarian_id == Librarian.librarian_id).\
                     filter(Loan.librarian_id==value and Loan.loan_active==False).all()
                 if book_search:
+                    clear()
                     for loan, book, customer, librarian in book_search:
                         print("Librarian {} {} loaned a book named `{}` to {} {} on {}".format(
                             librarian.librarian_name,
@@ -395,17 +456,35 @@ def search(user_selection):
                             customer.customer_surname,
                             loan.loan_date
                         ))
+                    input("Press Enter to continue...")
+                    clear()
                     break
                 else:
                     print("Nothing is loaned by this librarian")
+                    input("Press Enter to continue...")
                     break
             except ValueError:
                 print("Librarian ID must be an integer!")
+    elif user_selection == '0':
+        user_choice_menu()
     
 def search_from_input():
     clear()
-    user_selection = input("Search by: \n1| Everything (Excluding loaned books)\n2| Author\n3| Book\n4| Publisher\n5| All loaned books\n6| Loaned books by librarians ID\nChoice: ")
-    return search(user_selection)    
+    user_selections = [1, 2, 3, 4, 5, 6, 0]
+    
+    while True:
+        try:
+            user_selection = int(input("Search by: \n1| Everything (Excluding loaned books)\n2| Author\n3| Book\n4| Publisher\n5| All loaned books\n6| Loaned books by librarians ID\n0| Go back to menu\nChoice: "))
+            if user_selection not in user_selections:
+                clear()
+                print("It is not an option!")
+                continue
+            else:
+                return search(user_selection) 
+        except ValueError:
+            clear()
+            print("Only numbers below are an option")
+   
 
 while True:
     choice = user_choice_menu()
