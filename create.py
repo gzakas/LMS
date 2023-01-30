@@ -1,8 +1,6 @@
 from sqlalchemy.orm import sessionmaker
-# from sqlalchemy import and_, not_
-from main import Authors, Publishers, Books, Customers, Librarians, Loans, Date, engine
+from main import Authors, Publishers, Books, Customers, Librarians, Loans, engine
 import datetime
-import sqlalchemy
 
 Session = sessionmaker(bind=engine)
 session = Session()
