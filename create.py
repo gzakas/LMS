@@ -8,7 +8,6 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 def user_choice_menu():
-    clear()
     print("------ [ Library Admin Menu ] -------")
     print("1| Add a new publisher")
     print("2| Add a new author")
@@ -191,7 +190,15 @@ def register_customer_from_input():
             return
         clear()
         print("Customer was added successfully")
-        return register_customer(customer_name, customer_surname, customer_address)
+        register_customer(customer_name, customer_surname, customer_address)
+        user_choice = input("Do you want to add another book? (yes/no): ")
+        if user_choice.lower() == "no":
+            break
+        elif user_choice.lower() == "yes":
+            continue
+        else:
+            print("This input wasn't an option... I'll take it as a 'no' then")
+            break
 
 def new_librarian(librarian_name, librarian_surname):
     librarians = Librarian(librarian_name, librarian_surname)
@@ -407,8 +414,7 @@ def search(user_selection):
     clear()
     if user_selection == 1:
         value = input("Searching for: ")
-        author_name_search = session.query(Author).filter(Author.author_name.ilike(f"%{value}%")).all()
-        author_surname_search = session.query(Author).filter(Author.author_surname.ilike(f"%{value}%")).all()
+        authors = session.query(Author).filter(or_(Author.author_name.ilike(f"%{value}%"), Author.author_surname.ilike(f"%{value}%"))).all()
         book_name_search = session.query(Book).filter(or_(and_(Book.book_name.ilike(f"%{value}%"), 
             ~session.query(Loan).filter(Loan.book_id == Book.book_id).exists()),
                 and_(Book.book_name.ilike(f"%{value}%"), 
@@ -418,10 +424,8 @@ def search(user_selection):
             .filter(and_(Loan.loan_active == True,session.query(Book)\
             .filter(and_(Book.book_id == Loan.book_id, Book.book_name.ilike(f"%{value}%"))).exists()))
                 
-        for tries in author_name_search:
-            print("Authors name", tries)
-        for tries in author_surname_search:
-            print("Authors surname:", tries)
+        for tries in authors:
+            print(f"Author: {tries.author_name} {tries.author_surname}")
         for tries in book_name_search:
             print(f"Available book: {tries.book_id} {tries}")
         for tries in publisher_name_search:
@@ -435,12 +439,9 @@ def search(user_selection):
         clear()
     elif user_selection == 2:
         value = input("Searching in Authors for: ")
-        author_name_search = session.query(Author).filter(Author.author_name.ilike(f"%{value}%")).all()
-        author_surname_search = session.query(Author).filter(Author.author_surname.ilike(f"%{value}%")).all()
-        for tries in author_name_search:
-            print(f"Authors name: {tries.author_name}")
-        for tries in author_surname_search:
-            print(f"Authors surname: {tries.author_surname}")
+        authors = session.query(Author).filter(or_(Author.author_name.ilike(f"%{value}%"), Author.author_surname.ilike(f"%{value}%"))).all()
+        for author in authors:
+            print(f"{author.author_id}| {author.author_name} {author.author_surname}")
         input("Press Enter to continue...")
         clear()
     elif user_selection == 3:
@@ -462,7 +463,7 @@ def search(user_selection):
         publisher_search = session.query(Publisher).filter(Publisher.publisher_name.ilike(f"%{value}%")).all()
         if publisher_search:
             for tries in publisher_search:
-                print(tries)
+                print(tries.publisher_id, tries)
             input("Press Enter to continue...")
             clear()
         else:
@@ -470,10 +471,13 @@ def search(user_selection):
             input("Press Enter to continue...")
             clear()
     elif user_selection == 5:
-        loan_search = session.query(Loan, Book, Customer).\
-        join(Book, Loan.book_id == Book.book_id).\
-        join(Customer, Loan.customer_id == Customer.customer_id).\
-        filter(Loan.loan_active==True).all()
+        value = input("Searching in loaned books for: ")
+        loan_search = session.query(Loan, Book, Customer)\
+        .join(Book, Loan.book_id == Book.book_id)\
+        .join(Customer, Loan.customer_id == Customer.customer_id)\
+        .filter(Loan.loan_active==True)\
+        .filter(Book.book_name.ilike(f"%{value}%"))\
+        .all()
         if loan_search:
             for loan, book, customer in loan_search:
                 print("Book `{}` was loaned to {} {} on {} ".format(
@@ -485,7 +489,7 @@ def search(user_selection):
             input("Press Enter to continue...")
             clear()
         else:
-            print("Nothing is loaned")
+            print("Nothing similar to that is loaned")
             input("Press Enter to continue...")
             clear()
 
@@ -543,7 +547,7 @@ def search_from_input():
     
     while True:
         try:
-            user_selection = int(input("Search by: \n1| Everything\n2| Author\n3| Book\n4| Publisher\n5| All loaned books\n6| All loaned books by librarians ID \n0| Go back to menu\nChoice: "))
+            user_selection = int(input("Search by: \n1| Everything\n2| Author\n3| Book\n4| Publisher\n5| Loaned books\n6| Loaned books history by librarians ID \n0| Go back to menu\nChoice: "))
             if user_selection not in user_selections:
                 clear()
                 print("It is not an option!")
