@@ -353,19 +353,22 @@ def assign_loan_from_input():
 
 def check_active_loans(query=session.query(Loan)):
     clear()
-    query = session.query(Book, Loan, Customer)\
+    query = session.query(Book, Loan, Customer, Librarian)\
         .join(Loan, Book.book_id == Loan.book_id)\
         .join(Customer, Loan.customer_id == Customer.customer_id)\
+        .join(Librarian, Loan.librarian_id == Librarian.librarian_id)\
             .filter(Loan.loan_active == True).all()
     if query:
         for x in query:
-            print("Loan id: {}, Book id: {}, Book name: {}, Loaned at: {}, Customers name: {} {}".format(
+            print("Loan id: {}, Book id: {}, Book name: {}, Loaned at: {}, Customers name: {} {}, Librarian: {} {}".format(
                 x.Loan.loan_id,
                 x.Book.book_id,
                 x.Book.book_name,
                 x.Loan.loan_date,
                 x.Customer.customer_name,
-                x.Customer.customer_surname
+                x.Customer.customer_surname,
+                x.Librarian.librarian_name,
+                x.Librarian.librarian_surname
             ))
         input("Press Enter to continue...")
         clear()
@@ -427,9 +430,9 @@ def search(user_selection):
         for tries in authors:
             print(f"Author: {tries.author_name} {tries.author_surname}")
         for tries in book_name_search:
-            print(f"Available book: {tries.book_id} {tries}")
+            print(f"Available book: {tries.book_id} {tries.book_name}")
         for tries in publisher_name_search:
-            print("Publisher:", tries)
+            print(f"Publisher: {tries.publisher_name}")
         for tries in loaned_check:
             book = session.query(Book).get(tries.book_id)
             customer = session.query(Customer).get(tries.customer_id)
@@ -451,7 +454,7 @@ def search(user_selection):
             session.query(Loan).filter(Loan.book_id == Book.book_id, Loan.loan_active == 0).exists()))).all()
         if book_search:
             for tries in book_search:
-                print(f"Book ID: {tries.book_id} {tries}")
+                print(f"Book ID: {tries.book_id} {tries.book_name}")
             input("Press Enter to continue...")
             clear()
         else:
@@ -463,7 +466,7 @@ def search(user_selection):
         publisher_search = session.query(Publisher).filter(Publisher.publisher_name.ilike(f"%{value}%")).all()
         if publisher_search:
             for tries in publisher_search:
-                print(tries.publisher_id, tries)
+                print(f"{tries.publisher_id}. {tries.publisher_name}")
             input("Press Enter to continue...")
             clear()
         else:
@@ -521,14 +524,25 @@ def search(user_selection):
                 if book_search:
                     clear()
                     for loan, book, customer, librarian in book_search:
-                        print("Librarian {} {} loaned a book named `{}` to {} {} on {}".format(
+                        if loan.return_date:
+                            print("Librarian {} {} loaned a book named `{}` to {} {} on {} and it was returned on {}".format(
                             librarian.librarian_name,
                             librarian.librarian_surname,
                             book.book_name,
                             customer.customer_name,
                             customer.customer_surname,
-                            loan.loan_date
+                            loan.loan_date,
+                            loan.return_date
                         ))
+                        else:
+                            print("Librarian {} {} loaned a book named `{}` to {} {} on {} and it is still loaned".format(
+                                librarian.librarian_name,
+                                librarian.librarian_surname,
+                                book.book_name,
+                                customer.customer_name,
+                                customer.customer_surname,
+                                loan.loan_date
+                            ))
                     input("Press Enter to continue...")
                     clear()
                     break
